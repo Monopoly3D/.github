@@ -54,24 +54,6 @@ All server packets must have ```server``` packet class.
 
 ## Client Packets
 
-### ClientAuthPacket
-
-```json
-{
-  "data": {
-    "ticket": "JWT-encoded ticket"
-  },
-  "meta": {
-    "tag": "auth",
-    "class": "client"
-  }
-}
-```
-
-Authenticates client, must be the first packet sent to server, otherwise server will close the connection.
-
-```Ticket``` is a JWT-encoded token that authenticates client by user ID, client must get this ticket by sending a specific HTTP request.
-
 ### ClientPingPacket
 
 ```json
@@ -93,7 +75,7 @@ Sends a simple text message to server in request field, should be sent every 5 s
 ```json
 {
   "data": {
-    "game_id": "UUID"
+    "ticket": "JWT-encoded ticket"
   },
   "meta": {
     "tag": "player_join_game",
@@ -102,7 +84,11 @@ Sends a simple text message to server in request field, should be sent every 5 s
 }
 ```
 
-Sent when a player joins the game.
+Authenticates client in a game websocket endpoint and automatically joins it to a game, must be the first packet sent to this router, otherwise server will close the connection.
+
+```Ticket``` is a JWT-encoded token that authenticates client by user ID and game ID, client must get this ticket by sending a specific HTTP request.
+
+On success, client receives information about game parameters and every player in the game receives information about new player.
 
 ### ClientPlayerMovePacket
 
@@ -139,22 +125,24 @@ Sent when a player chooses whether they are ready to play or not.
 
 ## Server Packets
 
-### ServerAuthResponsePacket
+### ServerPlayerEnterGamePacket
 
 ```json
 {
   "data": {
-    "user_id": "UUID",
-    "username": "Plummy"
+    "game_id": "UUID",
+    "code": "XXXXXX",
+    "min_players": 2,
+    "max_players": 5
   },
   "meta": {
-    "tag": "auth",
+    "tag": "player_enter_game",
     "class": "server"
   }
 }
 ```
 
-Sends a response if the authentication succeeded, otherwise the server closes the connection with code 3000.
+Sends a response if the authentication to a game endpoint succeeded, otherwise the server closes the connection with code 3000.
 
 ### ServerErrorPacket
 
